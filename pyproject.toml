@@ -18,8 +18,8 @@ classifiers = [
 ]
 
 [project.urls]
-"Homepage" = "https://github.com/yourusername/my-package"
-"Bug Tracker" = "https://github.com/yourusername/my-package/issues"
+"Homepage" = "https://github.com/lcgong/nbkits"
+"Bug Tracker" = "https://github.com/lcgong/nbkits/issues"
 
 [tool.setuptools_scm]
 write_to = "src/nbkits/_version.py"
@@ -39,7 +39,7 @@ testpaths = [
 [tool.tox]
 legacy_tox_ini = """
 [tox]
-envlist = py37, py38, py39, py310
+envlist = py38, py39, py310, py311, py312
 isolated_build = true
 
 [testenv]
