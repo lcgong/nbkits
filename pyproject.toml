@@ -1,28 +1,49 @@
 [build-system]
-requires = ["setuptools>=42", "wheel", "setuptools_scm[toml]>=6.0"]
+requires = ["setuptools>=45", "setuptools_scm[toml]>=6.2"]
 build-backend = "setuptools.build_meta"
 
 [project]
 name = "nbkits"
-description = "A short description of your package"
+dynamic = ["version"]
 authors = [
-    { name="Chenggong Lyu", email="lcgong@gmail.com" }
+    {name = "Your Name", email = "your.email@example.com"},
 ]
-license = { file="LICENSE" }
+description = "A toolkit for jupyter's notebook"
 readme = "README.md"
-requires-python = ">=3.11"
-dependencies = []
+requires-python = ">=3.8"
+classifiers = [
+    "Programming Language :: Python :: 3",
+    "License :: OSI Approved :: MIT License",
+    "Operating System :: OS Independent",
+]
 
-[tool.setuptools]
-packages = ["nbkits"]
-
-[tool.setuptools.package-dir]
-"" = "src"
-
-# [tool.setuptools.packages.find]
-# where = ["src"]
+[project.urls]
+"Homepage" = "https://github.com/yourusername/my-package"
+"Bug Tracker" = "https://github.com/yourusername/my-package/issues"
 
 [tool.setuptools_scm]
+write_to = "src/nbkits/_version.py"
+
+[project.optional-dependencies]
+dev = [
+    "pytest",
+    "tox",
+]
 
 [tool.pytest.ini_options]
-testpaths = ["tests"]
+addopts = "-ra -q"
+testpaths = [
+    "tests",
+]
+
+[tool.tox]
+legacy_tox_ini = """
+[tox]
+envlist = py37, py38, py39, py310
+isolated_build = true
+
+[testenv]
+deps = pytest
+commands =
+    pytest
+"""
