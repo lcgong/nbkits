@@ -22,7 +22,8 @@ classifiers = [
 "Bug Tracker" = "https://github.com/lcgong/nbkits/issues"
 
 [tool.setuptools_scm]
-write_to = "src/nbkits/_version.py"
+# write_to = "src/nbkits/_version.py"
+# local_scheme = "no-local-version"
 
 [project.optional-dependencies]
 dev = [
