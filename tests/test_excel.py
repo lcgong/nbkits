@@ -10,6 +10,8 @@ def main():
 
     (
         xlstyler(ws)
+        .column_width(5, cols=range(2, 10))
+        .row_height(10, rows=range(2, 20))
         #
         .border(cols=range(2, 7), rows=range(2, 6), sides="outside", ls="thick")
         #
@@ -21,9 +23,7 @@ def main():
             c="ff0000",
         )
         #
-        .border(
-            cols=range(2, 7), rows=range(14, 18), sides="outside", ls="thick"
-        )
+        .border(cols=range(2, 7), rows=range(14, 18), sides="outside", ls="thick")
         .border(
             cols=range(2, 7),
             rows=range(14, 18),
@@ -39,9 +39,7 @@ def main():
             ls="medium",
             c="ff0000",
         )
-        .border(
-            cols=range(2, 7), rows=range(20, 24), sides="outside", ls="thick"
-        )
+        .border(cols=range(2, 7), rows=range(20, 24), sides="outside", ls="thick")
     )
 
     wb.save("example.xlsx")

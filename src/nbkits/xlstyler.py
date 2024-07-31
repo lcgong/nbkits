@@ -26,22 +26,61 @@ class ExcelSheetStyler:
     def __init__(self, sheet: Worksheet):
         self._sheet = sheet
 
-    def column_width(self, widths: list[float | int]):
-        for i, _width in enumerate(widths):
-            dim = self._sheet.column_dimensions[get_column_letter(i + 1)]
-            dim.width = _width
+    def column_width(
+        self,
+        width: float | int | list[float | int],
+        cols: list[int] | list[str] = None,
+    ):
+        sheet = self._sheet
+        cols = _parse_arg_cols(cols=cols, max_column=sheet.max_column)
+
+        if isinstance(width, (list, tuple)):
+            if len(width) != len(cols):
+                msg = (
+                    "The lists, 'width' and 'cols' , must be of equal length:"
+                    f" {len(width)} != {len(cols)}"
+                )
+                raise ValueError(msg)
+
+        elif isinstance(width, (int, float)):
+            width = [width] * len(cols)
+
+        for i, w in zip(cols, width):
+            dim = sheet.column_dimensions[get_column_letter(i)]
+            dim.width = w
 
         return self
 
-    def row_height(self, height: float, scope: str = ":"):
-        start, stop = None, None
-        if m := re.match("(\d)?:(\d)?", scope):
-            start, stop = m.group(1), m.group(2)
-        start = int(start or 1)
-        stop = int(stop or self._sheet.max_row)
+    def row_height(
+        self,
+        height: float | int | list[float | int],
+        rows: list[int] | list[str] = None,
+        skip_rows: list[int] = None,
+        skip_header: int | None = None,
+        skip_footer: int = None,
+    ):
+        sheet = self._sheet
+        rows = _parse_arg_rows(
+            rows=rows,
+            max_row=sheet.max_row,
+            skip_rows=skip_rows,
+            skip_header=skip_header,
+            skip_footer=skip_footer,
+        )
 
-        for i in range(start, stop + 1):
-            self._sheet.row_dimensions[i].height = height
+        if isinstance(height, (list, tuple)):
+            if len(height) != len(rows):
+                msg = (
+                    "The lists, 'height' and 'rows' , must be of equal length:"
+                    f" {len(height)} != {len(rows)}"
+                )
+                raise ValueError(msg)
+
+        elif isinstance(height, (int, float)):
+            height = [height] * len(rows)
+
+        for i, h in zip(rows, height):
+            self._sheet.row_dimensions[i].height = h
 
         return self
 
@@ -140,9 +179,6 @@ class ExcelSheetStyler:
             for j in cols:
                 cell = sheet.cell(i, j)
                 kwargs = _get_border_args(cell.border)
-                if i == 8 and j == 2:
-                    print()
-                    print("==ORIG: ", kwargs)
 
                 middle_sides = set(_OUTSIDES)
                 if i == min_row:
@@ -168,10 +204,6 @@ class ExcelSheetStyler:
                     elif side in ["right", "left"]:
                         if "vertical" in side_opts:
                             kwargs[side] = side_opts["vertical"]
-
-                if i == 8 and j == 2:
-                    print()
-                    print(5555, kwargs)
 
                 cell.border = Border(**kwargs)
 
