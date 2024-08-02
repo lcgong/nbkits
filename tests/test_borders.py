@@ -1,5 +1,6 @@
 import openpyxl
 from nbkits.xlstyler import xlstyle
+from pathlib import Path
 
 
 def main():
@@ -46,7 +47,8 @@ def main():
         )
     )
 
-    wb.save("test_borders.xlsx")
+    test_dir = Path(__file__).parent
+    wb.save(test_dir / "test_borders.xlsx")
 
 
 if __name__ == "__main__":

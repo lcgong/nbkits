@@ -1,6 +1,6 @@
 import openpyxl
 from nbkits.xlstyler import xlstyle
-
+from pathlib import Path
 
 def main():
     wb = openpyxl.Workbook()
@@ -95,7 +95,9 @@ def main():
         ws.cell(row, 2 + j, f"楷体 {sz}pt")
         xlstyle(ws).format(row=row, col=2 + j, va="center", ha="center", family="楷体", size=sz)
 
-    wb.save("test_format.xlsx")
+
+    test_dir = Path(__file__).parent
+    wb.save(test_dir / "test_format.xlsx")
 
 
 if __name__ == "__main__":

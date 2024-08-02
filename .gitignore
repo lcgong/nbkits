@@ -18,7 +18,6 @@ coverage.xml
 .mypy_cache
 .pytest_cache
 .hypothesis
-*.xlsx
 /dist/
 /src/*.egg-info
 /tmp/
