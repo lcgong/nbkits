@@ -21,3 +21,4 @@ coverage.xml
 *.xlsx
 /dist/
 /src/*.egg-info
+/tmp/

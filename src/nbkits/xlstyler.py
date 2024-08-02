@@ -1,9 +1,9 @@
-import re
 from openpyxl.worksheet.worksheet import Worksheet
-from openpyxl.styles import Border, Alignment, Side
+from openpyxl.styles import Border, Alignment, Side, Font, PatternFill
 from openpyxl.styles.alignment import horizontal_alignments, vertical_aligments
 from openpyxl.utils import get_column_letter, column_index_from_string
 
+from .utils import to_hex_color
 
 _LINE_STYLES = [
     "thin",
@@ -29,23 +29,23 @@ class ExcelSheetStyler:
     def column_width(
         self,
         width: float | int | list[float | int],
-        cols: list[int] | list[str] = None,
+        col: list[int] | list[str] = None,
     ):
         sheet = self._sheet
-        cols = _parse_arg_cols(cols=cols, max_column=sheet.max_column)
+        col = _parse_arg_cols(col=col, max_column=sheet.max_column)
 
         if isinstance(width, (list, tuple)):
-            if len(width) != len(cols):
+            if len(width) != len(col):
                 msg = (
                     "The lists, 'width' and 'cols' , must be of equal length:"
-                    f" {len(width)} != {len(cols)}"
+                    f" {len(width)} != {len(col)}"
                 )
                 raise ValueError(msg)
 
         elif isinstance(width, (int, float)):
-            width = [width] * len(cols)
+            width = [width] * len(col)
 
-        for i, w in zip(cols, width):
+        for i, w in zip(col, width):
             dim = sheet.column_dimensions[get_column_letter(i)]
             dim.width = w
 
@@ -54,14 +54,14 @@ class ExcelSheetStyler:
     def row_height(
         self,
         height: float | int | list[float | int],
-        rows: list[int] | list[str] = None,
+        row: list[int] | list[str] = None,
         skip_rows: list[int] = None,
         skip_header: int | None = None,
         skip_footer: int = None,
     ):
         sheet = self._sheet
-        rows = _parse_arg_rows(
-            rows=rows,
+        row = _parse_arg_rows(
+            row=row,
             max_row=sheet.max_row,
             skip_rows=skip_rows,
             skip_header=skip_header,
@@ -69,25 +69,25 @@ class ExcelSheetStyler:
         )
 
         if isinstance(height, (list, tuple)):
-            if len(height) != len(rows):
+            if len(height) != len(row):
                 msg = (
                     "The lists, 'height' and 'rows' , must be of equal length:"
-                    f" {len(height)} != {len(rows)}"
+                    f" {len(height)} != {len(row)}"
                 )
                 raise ValueError(msg)
 
         elif isinstance(height, (int, float)):
-            height = [height] * len(rows)
+            height = [height] * len(row)
 
-        for i, h in zip(rows, height):
+        for i, h in zip(row, height):
             self._sheet.row_dimensions[i].height = h
 
         return self
 
     def border(
         self,
-        cols=None,
-        rows=None,
+        col=None,
+        row=None,
         sides=None,
         t=None,
         l=None,  # noqa: E741
@@ -105,9 +105,9 @@ class ExcelSheetStyler:
     ):
         sheet = self._sheet
         max_column, max_row = sheet.max_column, sheet.max_row
-        cols = _parse_arg_cols(cols=cols, max_column=max_column)
-        rows = _parse_arg_rows(
-            rows=rows,
+        col = _parse_arg_cols(col=col, max_column=max_column)
+        row = _parse_arg_rows(
+            row=row,
             max_row=max_row,
             skip_rows=skip_rows,
             skip_header=skip_header,
@@ -173,10 +173,10 @@ class ExcelSheetStyler:
 
         _normalize_side_opts(side_opts, ls=ls, c=c)
 
-        min_row, max_row = min(rows), max(rows)
-        min_col, max_col = min(cols), max(cols)
-        for i in rows:
-            for j in cols:
+        min_row, max_row = min(row), max(row)
+        min_col, max_col = min(col), max(col)
+        for i in row:
+            for j in col:
                 cell = sheet.cell(i, j)
                 kwargs = _get_border_args(cell.border)
 
@@ -211,8 +211,8 @@ class ExcelSheetStyler:
 
     def format(
         self,
-        cols=None,
-        rows=None,
+        col=None,
+        row=None,
         ha=None,
         va=None,
         wrap_text=None,
@@ -220,15 +220,26 @@ class ExcelSheetStyler:
         text_rotation=None,
         shrink_to_fit=None,
         number_format=None,
+        family: str | None = None,
+        size: float | int | None = None,
+        color: str | None = None,
+        background_color: str | None = None,
+        bold: bool | None = None,
+        italic: bool | None = None,
+        strike: bool = None,
+        baseline: bool | None = None,
+        superscript: bool | None = None,
+        subscript: bool | None = None,
+        underline: bool | str | None = None,
         skip_rows=None,
         skip_header: int | None = None,
         skip_footer=None,
     ):
         sheet = self._sheet
         max_column, max_row = sheet.max_column, sheet.max_row
-        cols = _parse_arg_cols(cols=cols, max_column=max_column)
-        rows = _parse_arg_rows(
-            rows=rows,
+        col = _parse_arg_cols(col=col, max_column=max_column)
+        row = _parse_arg_rows(
+            row=row,
             max_row=max_row,
             skip_rows=skip_rows,
             skip_header=skip_header,
@@ -243,8 +254,55 @@ class ExcelSheetStyler:
             values = ", ".join([f"'{v}'" for v in vertical_aligments])
             raise ValueError(f"should be one of these values: {values}")
 
-        for i in rows:
-            for j in cols:
+        font_kwargs = {}
+        if family is not None and isinstance(family, str):
+            font_kwargs["name"] = family
+
+        if size is not None and isinstance(size, (float, int)):
+            font_kwargs["size"] = size
+
+        if color is not None and isinstance(color, str):
+            font_kwargs["color"] = to_hex_color(color)
+
+        if bold is not None and isinstance(bold, bool):
+            font_kwargs["bold"] = bold
+
+        if italic is not None and isinstance(italic, bool):
+            font_kwargs["italic"] = italic
+
+        if strike is not None and isinstance(strike, bool):
+            font_kwargs["strike"] = strike
+
+        if baseline is not None and isinstance(baseline, bool):
+            font_kwargs["vertAlign"] = "baseline"
+
+        if superscript is not None and isinstance(superscript, bool):
+            font_kwargs["vertAlign"] = "superscript"
+
+        if subscript is not None and isinstance(subscript, bool):
+            font_kwargs["vertAlign"] = "subscript"
+
+        if underline is not None:
+            if isinstance(underline, bool):
+                underline = "single"
+            elif isinstance(underline, str):
+                if underline not in _UNDERLINE_OPTIONS:
+                    _opts = ", ".join(f"'{c}'" for c in _UNDERLINE_OPTIONS)
+                    raise ValueError(
+                        "argument 'underline' must be a bool True/False or "
+                        f"one of these values: {_opts}"
+                    )
+            font_kwargs["underline"] = underline
+
+        font = Font(**font_kwargs) if font_kwargs else None
+
+        fill = None
+        if background_color is not None and isinstance(background_color, str):
+            background_color = to_hex_color(background_color)
+            fill = PatternFill(fill_type="solid", start_color=background_color)
+
+        for i in row:
+            for j in col:
                 cell = sheet.cell(i, j)
                 if ha or va or wrap_text or indent or shrink_to_fit or text_rotation:
                     cell.alignment = Alignment(
@@ -255,8 +313,64 @@ class ExcelSheetStyler:
                         shrink_to_fit=shrink_to_fit,
                         text_rotation=text_rotation,
                     )
+
                 if number_format is not None:
                     cell.number_format = number_format
+
+                if font is not None:
+                    cell.font = font
+
+                if fill is not None:
+                    cell.fill = fill
+
+        return self
+
+    def patten_fill(
+        self,
+        col: str | int | list[str] | list[int] | None = None,
+        row: str | int | list[str] | list[int] | None = None,
+        type: str | None = None,
+        color: str | None = None,
+        background_color: str | None = None,
+        skip_rows=None,
+        skip_header: int | None = None,
+        skip_footer=None,
+    ):
+        sheet = self._sheet
+        col = _parse_arg_cols(col=col, max_column=sheet.max_column)
+        row = _parse_arg_rows(
+            row=row,
+            max_row=sheet.max_row,
+            skip_rows=skip_rows,
+            skip_header=skip_header,
+            skip_footer=skip_footer,
+        )
+
+        kwargs = {}
+
+        fill = None
+        if type is None:
+            kwargs["fill_type"] = "none"
+        elif isinstance(type, str):
+            kwargs["fill_type"] = type
+        else:
+            raise ValueError("argument `type` must be a str or None")
+
+        if color is not None and isinstance(color, str):
+            kwargs["start_color"] = to_hex_color(color)
+
+        if background_color is not None and isinstance(background_color, str):
+            kwargs["end_color"] = to_hex_color(background_color)
+
+        fill = PatternFill(**kwargs)
+
+        for i in row:
+            for j in col:
+                cell = sheet.cell(i, j)
+                cell.fill = fill
+
+
+_UNDERLINE_OPTIONS = ["single", "double", "singleAccounting", "doubleAccounting"]
 
 
 def _update_kwargs(old_opts, side_opts, attr_name):
@@ -270,9 +384,11 @@ def _parse_border_side_option(side_opts, value, attr_name):
 
     if isinstance(value, str) and value in _LINE_STYLES:
         side_opts[attr_name] = value
+        return
 
-    elif isinstance(value, bool):
+    if isinstance(value, bool):
         side_opts[attr_name] = value
+        return
 
     opts = ", ".join([f"'{s}'" for s in _LINE_STYLES])
     raise ValueError(
@@ -297,6 +413,9 @@ _side_flag_map = {
 
 
 def _normalize_side_opts(side_opts, ls=None, c=None):
+    if isinstance(c, str):
+        c = to_hex_color(c)
+
     if ls is None and c is None:
         side = Side(style="thin")
     elif ls is not None:
@@ -314,7 +433,7 @@ def _normalize_side_opts(side_opts, ls=None, c=None):
             if isinstance(value, bool):
                 side_opts[attr_name] = side
             elif isinstance(value, str):
-                side_opts[attr_name] = Side(style=ls, color=c)
+                side_opts[attr_name] = Side(style=value, color=c)
 
     if any(side_opts.get(s, False) for s in ["diagonalUp", "diagonalDown"]):
         side_opts["diagonal"] = side
@@ -399,18 +518,20 @@ def _keep_unqiue_sorted(idxs):
 
 
 def _parse_arg_rows(
-    rows=None, max_row=None, skip_rows=None, skip_header=None, skip_footer=None
+    row=None, max_row=None, skip_rows=None, skip_header=None, skip_footer=None
 ):
-    if isinstance(rows, (list, tuple)):
-        rows = _parse_index_list(rows)
-    elif isinstance(rows, range):
-        rows = list(rows)
-    elif rows is None:
-        rows = list(range(1, max_row + 1))
+    if isinstance(row, (list, tuple)):
+        row = _parse_index_list(row)
+    elif isinstance(row, range):
+        row = list(row)
+    elif isinstance(row, int):
+        row = [row]
+    elif row is None:
+        row = list(range(1, max_row + 1))
     else:
-        raise ValueError(f"unknown rows='{repr(rows)}'")
+        raise ValueError(f"unknown rows='{repr(row)}'")
 
-    if len(rows) == 0:
+    if len(row) == 0:
         raise ValueError("no rows specified")
 
     if skip_rows is None:
@@ -423,22 +544,23 @@ def _parse_arg_rows(
         skip_rows += list(range(1, max_row + 1))[(-skip_header):]
 
     if skip_rows:
-        rows = [r for r in rows if r not in skip_rows]
+        row = [r for r in row if r not in skip_rows]
 
-    return rows
+    return row
 
 
-def _parse_arg_cols(cols=None, max_column=None):
-    if cols is None:
-        return list(range(1, max_column + 1))
+def _parse_arg_cols(col=None, max_column=None):
+    idxs = None
+    if col is None:
+        idxs = list(range(1, max_column + 1))
 
-    if isinstance(cols, (list, tuple)):
-        if all(isinstance(c, str) for c in cols):
-            _cols = []
+    elif isinstance(col, (list, tuple)):
+        if all(isinstance(c, str) for c in col):
+            idxs = []
             _invalids = []
-            for c in cols:
+            for c in col:
                 try:
-                    _cols += _parse_column_range(c)
+                    idxs += _parse_column_range(c)
                 except ValueError as ex:
                     _invalids.append(c)
             if _invalids:
@@ -446,14 +568,22 @@ def _parse_arg_cols(cols=None, max_column=None):
                 msg = f"invalid column names: {msg}"
                 raise ValueError(msg)
 
-            return _keep_unqiue_sorted(_cols)
+            idxs = _keep_unqiue_sorted(idxs)
         else:
-            return _parse_index_list(cols)
-    elif isinstance(cols, range):
-        return list(cols)
+            idxs = _parse_index_list(col)
 
-    raise ValueError(f"unknown argument: cols={repr(cols)}")
+    elif isinstance(col, range):
+        idxs = list(col)
+    elif isinstance(col, int):
+        idxs = [col]
+    else:
+        raise ValueError(f"unknown argument: cols={repr(col)}")
+
+    if not idxs:
+        raise ValueError("empty column list")
+
+    return idxs
 
 
-def xlstyler(sheet):
+def xlstyle(sheet):
     return ExcelSheetStyler(sheet)
