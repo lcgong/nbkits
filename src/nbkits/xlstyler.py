@@ -29,10 +29,13 @@ class ExcelSheetStyler:
     def column_width(
         self,
         width: float | int | list[float | int],
-        col: list[int] | list[str] = None,
+        col: list[int] | list[str] | None = None,
     ):
         sheet = self._sheet
-        col = _parse_arg_cols(col=col, max_column=sheet.max_column)
+        if col is None and isinstance(width, list):
+            col = range(1, 1 + len(width))
+        else:
+            col = _parse_arg_cols(col=col, max_column=sheet.max_column)
 
         if isinstance(width, (list, tuple)):
             if len(width) != len(col):
