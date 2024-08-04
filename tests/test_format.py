@@ -2,6 +2,7 @@ import openpyxl
 from nbkits.xlstyler import xlstyle
 from pathlib import Path
 
+
 def main():
     wb = openpyxl.Workbook()
     ws = wb.active
@@ -87,14 +88,14 @@ def main():
         kwargs = {sz: True}
         xlstyle(ws).format(row=row, col=j, va="center", ha="center", **kwargs)
 
-    
     row = 16
     font_sizes = [6, 8, 10, 12, 14, 16]
     xlstyle(ws).row_height(40, row=row)
     for j, sz in enumerate(font_sizes):
         ws.cell(row, 2 + j, f"楷体 {sz}pt")
-        xlstyle(ws).format(row=row, col=2 + j, va="center", ha="center", family="楷体", size=sz)
-
+        xlstyle(ws).format(
+            row=row, col=2 + j, va="center", ha="center", family="楷体", size=sz
+        )
 
     test_dir = Path(__file__).parent
     wb.save(test_dir / "test_format.xlsx")
